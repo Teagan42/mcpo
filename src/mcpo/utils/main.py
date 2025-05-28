@@ -27,6 +27,25 @@ MCP_ERROR_TO_HTTP_STATUS = {
 }
 
 
+async def wait_list_tools(session, timeout: int = 15, interval: int = 1) -> list:
+    """
+    Polls the MCP server until the tool list is available or timeout is reached.
+    Raises TimeoutError if tools are not available within the timeout.
+    """
+    start = asyncio.get_event_loop().time()
+    last_error = None
+    while True:
+        try:
+            tools_result = await session.list_tools()
+            if getattr(tools_result, "tools", None):
+                return tools_result
+        except Exception as e:
+            last_error = e
+        if asyncio.get_event_loop().time() - start > timeout:
+            raise TimeoutError(f"Timed out waiting for MCP server tools: {last_error}")
+        await asyncio.sleep(interval)
+
+
 def process_tool_response(result: CallToolResult) -> list:
     """Universal response processor for all tool endpoints"""
     response = []
