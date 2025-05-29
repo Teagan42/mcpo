@@ -17,7 +17,7 @@ from starlette.routing import Mount
 logger = logging.getLogger(__name__)
 
 
-from mcpo.utils.main import get_model_fields, get_tool_handler
+from mcpo.utils.main import get_model_fields, get_tool_handler, wait_list_tools
 from mcpo.utils.auth import get_verify_api_key, APIKeyMiddleware
 
 async def create_dynamic_endpoints(
