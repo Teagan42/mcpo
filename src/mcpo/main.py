@@ -97,6 +97,7 @@ async def lifespan(app: FastAPI):
     tools_interval = getattr(app.state, "tools_interval", 1)
     pass_key_as = getattr(app.state, "pass_key_as", None)
     pass_key_name = getattr(app.state, "pass_key_name", None)
+    api_key = getattr(app.state, "api_key", None)
 
     if (server_type == "stdio" and not command) or (
         server_type == "sse" and not args[0]
