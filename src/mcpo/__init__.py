@@ -67,6 +67,12 @@ def main(
     tools_interval: Annotated[
         Optional[int], typer.Option("--tools-interval", help="Polling interval for tools")
     ] = 1,
+    pass_key_as: Annotated[
+        Optional[str], typer.Option("--pass-key-as", help="Pass API key as header or query param")
+    ] = None,
+    pass_key_name: Annotated[
+        Optional[str], typer.Option("--pass-key-name", help="Pass API key with this name")
+    ] = None,
 ):
     server_command = None
     if not config_path:
@@ -139,6 +145,8 @@ def main(
             path_prefix=path_prefix,
             tools_timeout=tools_timeout,
             tools_interval=tools_interval,
+            pass_key_as=pass_key_as,
+            pass_key_name=pass_key_name,
         )
     )
 

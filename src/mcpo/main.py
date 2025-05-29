@@ -95,6 +95,8 @@ async def lifespan(app: FastAPI):
     api_dependency = getattr(app.state, "api_dependency", None)
     tools_timeout = getattr(app.state, "tools_timeout", 5)
     tools_interval = getattr(app.state, "tools_interval", 1)
+    pass_key_as = getattr(app.state, "pass_key_as", None)
+    pass_key_name = getattr(app.state, "pass_key_name", None)
 
     if (server_type == "stdio" and not command) or (
         server_type == "sse" and not args[0]
@@ -126,7 +128,17 @@ async def lifespan(app: FastAPI):
                     )
                     yield
         if server_type == "sse":
-            async with sse_client(url=args[0], sse_read_timeout=None) as (
+            url = args[0]
+            headers = {}
+            if pass_key_as and pass_key_name:
+                if pass_key_as == 'header':
+                    headers[pass_key_name] = f"Bearer {api_key}"
+                else:
+                    if "?" in url:
+                        url = f"{url}&{pass_key_name}={api_key}"
+                    else:
+                        url = f"{url}?{pass_key_name}={api_key}"
+            async with sse_client(url=url, headers=headers, sse_read_timeout=None) as (
                 reader,
                 writer,
             ):
@@ -145,8 +157,17 @@ async def lifespan(app: FastAPI):
             if not url.endswith("/"):
                 url = f"{url}/"
 
+            headers = {}
+            if pass_key_as and pass_key_name:
+                if pass_key_as == 'header':
+                    headers[pass_key_name] = f"Bearer {api_key}"
+                else:
+                    if "?" in url:
+                        url = f"{url}&{pass_key_name}={api_key}"
+                    else:
+                        url = f"{url}?{pass_key_name}={api_key}"
             # Connect using streamablehttp_client from the SDK, similar to sse_client
-            async with streamablehttp_client(url=url) as (
+            async with streamablehttp_client(url=url, headers=headers) as (
                 reader,
                 writer,
                 _,  # get_session_id callback not needed for ClientSession
@@ -184,6 +205,9 @@ async def run(
     # MCP Tool
     tools_timeout = kwargs.get("tools_timeout", 15)
     tools_interval = kwargs.get("tools_interval", 1)
+    pass_key_as = kwargs.get("pass_key_as", None)
+    pass_key_name = kwargs.get("pass_key_name", None)
+    api_key = kwargs.get("api_key", None)
 
     # mcpo server
     name = kwargs.get("name") or "MCP OpenAPI Proxy"
@@ -233,6 +257,9 @@ async def run(
 
     main_app.state.tools_timeout = tools_timeout
     main_app.state.tools_interval = tools_interval
+    main_app.state.pass_key_as = pass_key_as
+    main_app.state.pass_key_name = pass_key_name
+    main_app.state.api_key = api_key
 
     # Add middleware to protect also documentation and spec
     if api_key and strict_auth:
