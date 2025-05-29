@@ -153,7 +153,7 @@ async def lifespan(app: FastAPI):
             ):
                 async with ClientSession(reader, writer) as session:
                     app.state.session = session
-                     await create_dynamic_endpoints(
+                    await create_dynamic_endpoints(
                         app,
                         api_dependency=api_dependency,
                         tools_timeout=tools_timeout,
